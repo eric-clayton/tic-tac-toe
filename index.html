@@ -10,14 +10,18 @@
 <body>
     <h1>Tic-Tac-Toe</h1>
     <form class="name-form">
-        <label for="player-one-name">Player 1 Name:</label>
-        <input type="text" name="player-one-name" id="player-one-name" required>
-        <label for="player-two-name">Player 2 Name:</label>
-        <input type="text" name="player-two-name" id="player-two-name" required>
-        <input type="button" value="Start game">
+        <p>
+            <label for="player-one-name">Player 1 Name:</label>
+            <input type="text" name="player-one-name" id="player-one-name" required>
+        </p>
+        <p>
+            <label for="player-two-name">Player 2 Name:</label>
+            <input type="text" name="player-two-name" id="player-two-name" required>
+        </p>
+        <input type="submit" value="Start game">
     </form>
 
-    <div class="winner-display"></div>
+    <div class="info-display"></div>
     <div class="tic-tac-toe-container"></div>
     <button class="reset-button">Reset Game</button>
 </body>

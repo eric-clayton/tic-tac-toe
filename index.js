@@ -35,8 +35,9 @@ const gameController = (function () {
     let player1;
     let player2
     let rounds = 0;
-    let gameOver = false;
+    let gameActive = false;
     function initGame(player1Name, player2Name) {
+        resetGame();
         player1 = createPlayer(player1Name, 'X');
         player2 = createPlayer(player2Name, 'O');
         currentPlayer = player1;
@@ -54,7 +55,7 @@ const gameController = (function () {
                 vertical = false;
             }
         }
-        if (row === column || row === 3-column-1){
+        if (row === column || row === 3-column-1) {
             let leftToRight = true;
             let rightToLeft = true;
             for (let i = 0; i < 3; i++) {
@@ -73,22 +74,26 @@ const gameController = (function () {
         return horizontal || vertical || diagonal;
     }
     function playRound(row, column) {
-        if(gameOver) {
+        if(!gameActive) {
+            if(!getCurrentPlayerName()) {
+                return `Please add your names to start the game`
+            }
             return "Reset the game to play again";
         }
         const marker = currentPlayer.getMarker()
         if(gameBoard.placeMarker(marker, row, column)) {
             rounds++;
             if(checkWin(marker, row, column)) {
-                gameOver = true;
+                gameActive = false;
                 return `${currentPlayer.getName()} wins!`
             }
             else if (rounds === 9) {
-                gameOver = true;
+                gameActive = false;
                 return "It's a Draw!"
             }
             else {
                 currentPlayer = currentPlayer === player1 ? player2 : player1;
+                return `${getCurrentPlayerName()}'s turn`
             }
         }
         else {
@@ -100,9 +105,18 @@ const gameController = (function () {
         gameBoard.resetBoard();
         rounds = 0;
         currentPlayer = player1;
-        gameOver = false;
+        gameActive = true;
     }
-    return {initGame, playRound, resetGame};
+    function isGameActive() {
+        return gameActive;
+    }
+    function getCurrentPlayerName() {
+        if(!currentPlayer) {
+            return null;
+        }
+        return currentPlayer.getName();
+    }
+    return {initGame, playRound, resetGame, isGameActive, getCurrentPlayerName};
 })();
 const createPlayer = function(name, marker) {
     const playerName = name;
@@ -118,11 +132,18 @@ const createPlayer = function(name, marker) {
 const displayController = (function () {
     let ticTacToeContainer;
     let winnerDisplay;
+    let form;
+    let player1Input;
+    let player2Input
     function cacheDom() {
         ticTacToeContainer = document.querySelector('.tic-tac-toe-container');
-        winnerDisplay = document.querySelector('.winner-display');
+        infoDisplay = document.querySelector('.info-display');
+        form = document.querySelector('.name-form');
+        player1Input = document.querySelector('#player-one-name');
+        player2Input = document.querySelector('#player-two-name');
+        resetButton = document.querySelector('.reset-button')
     }
-    function render(winner ="") {
+    function render(info ="") {
         const board = gameBoard.getBoard();
         const frag = document.createDocumentFragment();
         for(let [i, row] of board.entries()) {
@@ -137,16 +158,33 @@ const displayController = (function () {
         }
         ticTacToeContainer.innerHTML = '';
         ticTacToeContainer.appendChild(frag);
-        winnerDisplay.textContent = winner;
+        infoDisplay.textContent = info;
     }
     function bindEvents() {
         ticTacToeContainer.addEventListener('click', handleCellClick);
+        form.addEventListener('submit', handleFormSubmit);
+        resetButton.addEventListener('click', handleResetButtonClick)
     }
     function handleCellClick(e) {
         if(e.target.className == 'cell') {
-            const winner = gameController.playRound(e.target.dataset.row, e.target.dataset.column);
-            render(winner);
+            const info = gameController.playRound(e.target.dataset.row, e.target.dataset.column);
+            render(info);
         }
+    }
+    function handleFormSubmit(e) {
+        e.preventDefault();
+        gameController.initGame(player1Input.value, player2Input.value);
+        displayCurrentPlayer();
+    }
+    function handleResetButtonClick() {
+        if (gameController.getCurrentPlayerName()){
+            gameController.resetGame();
+            displayCurrentPlayer();
+        }
+    }
+    function displayCurrentPlayer() {
+        const name = gameController.getCurrentPlayerName();
+        render(`${name}'s turn`)
     }
     function init() {
         cacheDom();
@@ -155,5 +193,4 @@ const displayController = (function () {
     }
     return {init};
 })();
-gameController.initGame("Billy", "Bob");
 displayController.init();
