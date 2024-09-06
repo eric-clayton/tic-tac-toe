@@ -74,19 +74,18 @@ const gameController = (function () {
     }
     function playRound(row, column) {
         if(gameOver) {
-            console.log("Reset the game to play again");
-            return;
+            return "Reset the game to play again";
         }
         const marker = currentPlayer.getMarker()
         if(gameBoard.placeMarker(marker, row, column)) {
             rounds++;
             if(checkWin(marker, row, column)) {
-                console.log(`${currentPlayer.getName()} wins!`);
                 gameOver = true;
+                return `${currentPlayer.getName()} wins!`
             }
             else if (rounds === 9) {
-                console.log("Draw");
                 gameOver = true;
+                return "It's a Draw!"
             }
             else {
                 currentPlayer = currentPlayer === player1 ? player2 : player1;
@@ -95,7 +94,7 @@ const gameController = (function () {
         else {
             console.log("Error: enter a valid posittion");
         }
-        console.log(gameBoard.getBoard());
+        return "";
     }
     function resetGame() {
         gameBoard.resetBoard();
@@ -116,3 +115,45 @@ const createPlayer = function(name, marker) {
     }
     return {getName, getMarker};
 }
+const displayController = (function () {
+    let ticTacToeContainer;
+    let winnerDisplay;
+    function cacheDom() {
+        ticTacToeContainer = document.querySelector('.tic-tac-toe-container');
+        winnerDisplay = document.querySelector('.winner-display');
+    }
+    function render(winner ="") {
+        const board = gameBoard.getBoard();
+        const frag = document.createDocumentFragment();
+        for(let [i, row] of board.entries()) {
+            for(let [j, cell] of row.entries()) {
+                const El = document.createElement('div');
+                El.className = 'cell';
+                El.textContent = cell;
+                El.dataset.row = i;
+                El.dataset.column = j;
+                frag.appendChild(El);
+            }
+        }
+        ticTacToeContainer.innerHTML = '';
+        ticTacToeContainer.appendChild(frag);
+        winnerDisplay.textContent = winner;
+    }
+    function bindEvents() {
+        ticTacToeContainer.addEventListener('click', handleCellClick);
+    }
+    function handleCellClick(e) {
+        if(e.target.className == 'cell') {
+            const winner = gameController.playRound(e.target.dataset.row, e.target.dataset.column);
+            render(winner);
+        }
+    }
+    function init() {
+        cacheDom();
+        render();
+        bindEvents();
+    }
+    return {init};
+})();
+gameController.initGame("Billy", "Bob");
+displayController.init();
